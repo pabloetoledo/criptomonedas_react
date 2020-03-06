@@ -1,24 +1,62 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, {useState, useEffect} from 'react';
+import axios from 'axios';
+
+import imagen from './cryptomonedas.png';
+import Formulario from './components/Formulario';
+import Spinner from './components/Spinner';
+import Cotizacion from './components/Cotizacion';
 
 function App() {
+
+  const [moneda, guardarMoneda] = useState('');
+  const [cryptomoneda, guardarCryptomoneda] = useState('');
+  const [cargando, guardarCargando] = useState(false);
+  const [resultado, guardarResultado] = useState({})
+
+  useEffect(
+    () => {
+      const cotizarCriptomoneda = async() => {
+
+        //si no hay moneda no ejecutar
+        if(moneda === '') return;
+
+        const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${cryptomoneda}&tsyms=${moneda}`;
+
+        const resultado = await axios.get(url);
+        
+        //mostrar spinner
+        guardarCargando(true);
+
+        setTimeout(() => {
+            guardarCargando(false);
+            guardarResultado(resultado.data.DISPLAY[cryptomoneda][moneda]);
+        }, 3000);
+
+      }
+
+      cotizarCriptomoneda();
+    }, [cryptomoneda, moneda]
+  )
+
+  //mostrar spinner
+
+  const componente = (cargando) ? <Spinner/> : <Cotizacion resultado={resultado}/>;
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="container">
+      <div className="row">
+        <div className="one-half column">
+          <img src={imagen} alt="imagen cryptomoneda" className="logotipo"/>
+        </div>
+        <div className="one-half column">
+          <h1>Cotiza Criptomonedas al instante</h1>
+          <Formulario
+            guardarMoneda = {guardarMoneda}
+            guardarCryptomoneda = {guardarCryptomoneda}
+          />
+          {componente}
+        </div>
+      </div>      
     </div>
   );
 }
